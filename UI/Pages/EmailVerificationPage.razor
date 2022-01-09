@@ -1,0 +1,54 @@
+﻿@page "/emailverification/{username}"
+@inject IUserRepository _repository
+@inject NavigationManager NavManager
+
+<PageTitle>Email Verification</PageTitle>
+
+<DarkMode />
+
+<AuthorizeView>
+    <Authorized>
+        Your Email is already verified.
+    </Authorized>
+    <NotAuthorized Context="na_context">
+        <EditForm Model="emailVerification" OnSubmit="VerifyEmail">
+            <h1>Email Verification</h1>
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <Validator @ref="emailValidator" />
+
+            <InputText class="loi si" @bind-Value="emailVerification.Code" placeholder="Code" /> <br />
+
+            <button><span class="material-icons">play_arrow</span> Verify!</button>
+        </EditForm>
+
+        @code {
+            [Parameter]
+            public string? Username { get; set; }
+
+            private User? user;
+            private UserCode code;
+
+            private EmailVerificationForm emailVerification;
+            private Validator emailValidator;
+
+            protected async override Task OnInitializedAsync() {
+                emailVerification = new EmailVerificationForm();
+                user = (await _repository.FilterAsync(u => u.Username.ToUpper() == Username.ToUpper())).FirstOrDefault();
+                if(user == null) NavManager.NavigateTo("/", forceLoad: true);
+                else code = (await _repository.GetUserCodes(user)).SingleOrDefault(c => c.Type == CodeType.EMAIL);
+            }
+
+            private async void VerifyEmail(EditContext context) {
+                emailValidator.Clear();
+                if(!context.Validate()) return;
+                else if(code.Code != emailVerification.Code) emailValidator.DisplayErrors(new Dictionary<string, List<string>>() { { "Account", new List<string>() { "Code is not valid." } } });
+                else {
+                    user.Codes.Remove(code);
+                    await _repository.UpdateAsync(user);
+                    NavManager.NavigateTo("/");
+                }
+            }
+        }
+    </NotAuthorized>
+</AuthorizeView>

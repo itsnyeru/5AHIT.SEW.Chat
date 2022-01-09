@@ -1,0 +1,72 @@
+﻿/*body{
+    background-color: rgb(50, 50, 50);
+    color: white;
+}*/
+.chat {
+  height: 100vh;
+  display: grid;
+  grid-template-rows: min-content 1fr min-content;
+}
+.chat .header {
+  background: rgba(10, 10, 10, 0.1);
+  padding: 5px;
+}
+.chat .header .title {
+  font-size: 25px;
+  font-weight: bold;
+}
+.chat .messages {
+  margin: 10px;
+  min-height: 0;
+  max-height: 100%;
+  overflow-y: scroll;
+}
+.chat .messages .user {
+  font-size: 20px;
+  font-weight: bold;
+}
+.chat .messages .attachment {
+  cursor: pointer;
+  padding: 5px;
+  background: rgba(10, 10, 10, 0.2);
+}
+.chat .messages .attachment:nth-child(2n) {
+  background: rgba(10, 10, 10, 0.35);
+}
+.chat .sendmessage {
+  background: rgba(10, 10, 10, 0.1);
+  padding: 10px;
+}
+.chat .sendmessage .sendmessage-content {
+  display: grid;
+  grid-template-columns: 1fr 30px 30px;
+}
+.chat .attachment {
+  display: flex;
+}
+.chat .validation {
+  margin-top: 5px;
+}
+.chat .validation > ul {
+  margin: 0;
+  padding: 0;
+}
+.chat .validation > ul li {
+  list-style: none;
+}
+
+input {
+  padding: 0;
+  background: none;
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  border-radius: 10px;
+  text-indent: 10px;
+  outline: 0;
+}
+
+button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+}

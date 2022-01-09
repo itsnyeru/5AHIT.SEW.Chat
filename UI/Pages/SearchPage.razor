@@ -1,0 +1,65 @@
+﻿@page "/search"
+@inject IUserRepository _repository
+@inject IChatRepository _chatRepository
+@inject NavigationManager NavManager
+@inject AuthenticationStateProvider AuthProvider
+
+<PageTitle>Search User</PageTitle>
+
+<DarkMode />
+
+<AuthorizeView>
+    <Authorized>
+        <input class="loi" @bind-value:event="oninput" @bind-value=Value type="text" placeholder="Search..." />
+
+        <hr />
+
+        @if(Results.Any()) {
+            <div class="list">
+                @foreach(User u in Results) {
+                    <div>
+                        <span class="pre">
+                            <span>@u.Username</span>
+                        </span>
+                        <span class="post">
+                            @if(u.ChatMode == ChatMode.PUBLIC) {
+                                <button @onclick=@(() => Chat(u))><span class="material-icons">chat</span></button>
+                            }
+                            <button @onclick=@(() => Request(u))><span class="material-icons">add</span></button>
+                        </span>
+                    </div>
+                }
+            </div>
+        } else {
+            <div>There are no users to be found.</div>
+        }
+
+
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    List<User> Results { get; set; } = new List<User>();
+    string _value = "";
+    string Value { get => _value; set { _value = value; SearchUser(); } }
+
+    User user;
+
+    protected async override Task OnInitializedAsync() {
+        user = ((IAuthService)AuthProvider).GetAccount();
+        await SearchUser();
+    }
+
+    private async Task SearchUser() => Results = await _repository.SearchUser(user, _value);
+
+    private async Task Chat(User u) {
+        Singlechat chat = await _chatRepository.CreateSinglechat(user, u);
+        //Singlechat chat = await _repository.CreateSinglechat(user, u);
+        NavManager.NavigateTo($"/chat/{chat.Id}");
+    }
+
+    private async Task Request(User u) {
+        await _repository.AddFriend(user, u);
+        await SearchUser();
+    }
+}

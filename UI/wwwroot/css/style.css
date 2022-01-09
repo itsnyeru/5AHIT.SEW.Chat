@@ -1,0 +1,90 @@
+﻿#navbar {
+  background-color: rgba(10, 10, 10, 0.6) !important;
+  background-image: none; }
+
+.chat {
+  height: 100vh;
+  display: grid;
+  grid-template-rows: min-content 1fr min-content; }
+  .chat .header {
+    background: rgba(10, 10, 10, 0.1);
+    padding: 5px;
+    display: flex;
+    align-items: center; }
+    .chat .header .title {
+      font-size: 25px;
+      font-weight: bold; }
+    .chat .header img {
+      width: 50px;
+      height: 50px;
+      border-radius: 100%;
+      border: 1px solid black;
+      margin-right: 10px; }
+  .chat .messages {
+    margin: 10px;
+    min-height: 0;
+    max-height: 100%;
+    overflow-y: scroll; }
+    .chat .messages .user {
+      font-size: 20px;
+      font-weight: bold; }
+    .chat .messages .attachment {
+      cursor: pointer;
+      padding: 5px;
+      background: rgba(10, 10, 10, 0.2); }
+      .chat .messages .attachment:nth-child(2n) {
+        background: rgba(10, 10, 10, 0.35); }
+  .chat .sendmessage {
+    background: rgba(10, 10, 10, 0.1);
+    padding: 10px; }
+    .chat .sendmessage .sendmessage-content {
+      display: grid;
+      grid-template-columns: 1fr 30px 30px; }
+  .chat .attachment {
+    display: flex; }
+  .chat .validation {
+    margin-top: 5px; }
+    .chat .validation > ul {
+      margin: 0;
+      padding: 0; }
+      .chat .validation > ul li {
+        list-style: none; }
+
+.list div {
+  cursor: pointer;
+  background: rgba(10, 10, 10, 0.2);
+  padding: 5px;
+  display: grid;
+  grid-template-columns: 1fr min-content; }
+  .list div:nth-child(2n) {
+    background: rgba(10, 10, 10, 0.35); }
+  .list div span {
+    display: flex; }
+
+main {
+  padding: 10px; }
+
+input {
+  padding: 0;
+  background: none;
+  border: 1px solid rgba(0, 0, 0, 0.6);
+  border-radius: 10px;
+  text-indent: 10px;
+  outline: 0; }
+
+span {
+  color: inherit; }
+
+button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  color: inherit;
+  display: flex; }
+
+.loi {
+  width: 100%; }
+
+.si {
+  margin-bottom: 5px; }

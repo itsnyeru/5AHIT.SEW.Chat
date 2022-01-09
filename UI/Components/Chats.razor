@@ -1,0 +1,33 @@
+﻿@inject IUserRepository _repository
+@inject IChatRepository _chatRepository
+@inject NavigationManager NavManager
+@inject AuthenticationStateProvider AuthProvider
+
+<PageTitle>Chats</PageTitle>
+
+<AuthorizeView>
+    <Authorized Context="AuthContext">
+        <div class="list">
+            @foreach(DisplayChat c in ChatList) {
+                <div @onclick=@(() => NavManager.NavigateTo($"/chat/{c.Id}"))>
+                    <span class="pre">
+                        <img src=@c.Image style="width:25px;height:25px;border-radius:100%;border:1px solid black;margin-right:5px;" />
+                        <span>@c.Name</span>
+                    </span>
+
+                </div>
+            }
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    List<DisplayChat> ChatList = new List<DisplayChat>();
+
+    User user = new User();
+
+    protected async override Task OnInitializedAsync() {
+        user = ((IAuthService)AuthProvider).GetAccount();
+        ChatList = await _chatRepository.GetChats(user);
+    }
+}

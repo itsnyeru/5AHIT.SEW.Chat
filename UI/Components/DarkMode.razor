@@ -1,0 +1,16 @@
+﻿@inject AuthenticationStateProvider AuthProvider
+@inject IUserRepository _repository
+
+@((MarkupString)style)
+
+@code {
+    private string style = "";
+
+    protected override Task OnInitializedAsync() {
+        User? user = ((IAuthService)AuthProvider).GetAccount();
+        if(user != null)
+            if(user.DarkMode)
+                style = "<style>body{background-color: rgb(50, 50, 50);color: white;}</style>";
+        return base.OnInitializedAsync();
+    }
+}

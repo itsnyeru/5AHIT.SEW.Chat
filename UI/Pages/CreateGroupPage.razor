@@ -1,0 +1,66 @@
+﻿@page "/creategroup"
+@inject IUserRepository _repository
+@inject IChatRepository _chatRepository
+@inject NavigationManager NavManager
+@inject AuthenticationStateProvider AuthProvider
+
+<PageTitle>Create Group</PageTitle>
+
+<DarkMode />
+
+<AuthorizeView>
+    <Authorized Context="AuthContext">
+        <EditForm Model=chat OnValidSubmit=Create>
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+            <Validator @ref="validator" />
+            <input class="loi" @bind-value=chat.Name type="text" placeholder="Name..." />
+
+            <hr />
+
+            <div class="list">
+                @foreach(UserSelection u in Selection) {
+                    <div>
+                        <span class="pre">
+                            <InputCheckbox @bind-Value=u.Value />
+                            <span>@u.User.Username</span>
+                        </span>
+                    </div>
+                }
+            </div>
+
+            <hr />
+
+            <button><span class="material-icons">add_circle</span> Save</button>
+        </EditForm>
+
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    List<UserSelection> Selection { get; set; } = new List<UserSelection>();
+    Groupchat chat { get; set; } = new Groupchat();
+    Validator validator;
+    
+
+    User user;
+
+    protected async override Task OnInitializedAsync() {
+        user = ((IAuthService)AuthProvider).GetAccount();
+        Selection.AddRange((await _repository.GetFriends(user)).Select(f => new UserSelection() { User = f }));
+    }
+
+    /* Create a Groupchat */
+    private async Task Create() {
+        try {
+            List<ChatUser> users = Selection.Where(s => s.Value).Select(u => new ChatUser() { User = u.User }).ToList();
+            users.Add(new ChatUser() { User = user });
+            chat.Users = users;
+            chat = await _chatRepository.CreateGroupchat(chat);
+            NavManager.NavigateTo($"/chat/{chat.Id}");
+        } catch(Exception ex) {
+            validator.DisplayErrors(new Dictionary<string, List<string>>() { { "Group", new List<string>() { ex.Message } } });
+        }
+
+    }
+}

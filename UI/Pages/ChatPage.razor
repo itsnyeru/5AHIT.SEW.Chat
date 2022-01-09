@@ -1,0 +1,230 @@
+﻿@page "/chat/{id}"
+@using Microsoft.AspNetCore.SignalR.Client
+@implements IDisposable
+@inject IUserRepository _repository
+@inject IChatRepository _chatRepository
+@inject IMessageRepository _messageRepository
+@inject NavigationManager NavManager
+@inject AuthenticationStateProvider AuthProvider
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Chat</PageTitle>
+
+<DarkMode />
+
+@((MarkupString)"<style>main{padding:0;}</style>")
+
+<AuthorizeView>
+    <Authorized Context=AuthContext>
+
+        <div class="chat">
+            <div class="header">
+                <img src=@chat.Image />
+                <div class="title">
+                    @chat.Name
+                </div>
+            </div>
+            <div class="messages">
+                @if(!messages.Any()) {
+                    <div>Write the first message.</div>
+                }
+                @foreach(DisplayMessage m in messages.OrderBy(m => m.Message.MessageId)) {
+                    <hr />
+                    <div class="message">
+                        <div class="user" style="display:flex;align-items:center;">
+                            <p style="padding:0;margin:0;">@m.Message.User.Username</p>
+                            <span style="font-size:10px;margin:0 10px;">
+                                @if(chat.Singlechat) {
+                                    @if(m.Status.Count() > 1) {
+                                        @("Read")
+                                    } else {
+                                        @("Open")
+                                    }
+                                } else {
+                                    @if(m.Status.Count() <= 1) {
+                                        @("Open")
+                                    } else if(m.Status.Count() < chat.Chat.Users.Count()) {
+                                        @("Read by " + m.Status.Aggregate((a,b) => a+", "+b))
+                                    } else {
+                                        @("Read by All")
+                                    }
+                                }
+                            </span>
+                            @if(m.Message.User.Id == user.Id) {
+                                <button @onclick=@(() => Delete(m))><span class="material-icons">delete</span></button>
+                            }
+                        </div>
+                        <div class="message-content">@m.Message.Content.Decrypt()</div>
+                        @foreach(MessageAttachment a in m.Message.MessageAttachments) {
+                            <buton class="attachment" @onclick=@(async () => await JSRuntime.InvokeVoidAsync("DownloadFile", a.Name, a.Attachment.Type, a.Attachment.Content))>
+                                <span class="material-icons">file_download</span>
+                                <span>@a.Name</span>
+                            </buton>
+                        }
+                    </div>
+                }
+            </div>
+
+
+            <div class="sendmessage">
+                <div>
+                    @foreach(InputDocument doc in message.Attachment) {
+                        <div class="attachment">
+                            <span>@doc.Name</span>
+                            <button @onkeypress:preventDefault @onclick=@(() => message.Attachment.Remove(doc))><span class="material-icons">delete</span></button>
+                        </div>
+                    }
+                </div>
+                <EditForm Model=message OnSubmit=Send>
+                    <div class="sendmessage-content">
+
+                        <InputText @bind-Value=message.Content />
+                        <button type="button" onclick="document.getElementById('selectFile').click();"><span class="material-icons">file_upload</span></button>
+                        <button><span class="material-icons">send</span></button>
+                    </div>
+                    <div class="validation">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
+                        <Validator @ref="validator" />
+                    </div>
+                    <InputFile OnChange=InputFile id="selectFile" style="display:none" multiple />
+                </EditForm>
+            </div>
+        </div>
+    </Authorized>
+</AuthorizeView>
+
+
+@code {
+    [Parameter]
+    public string Id { get; set; } = "";
+
+    bool isOpen = false;
+
+    User? user;
+
+    DisplayChat chat = new DisplayChat();
+    List<DisplayMessage> messages = new List<DisplayMessage>();
+
+    InputMessage message = new InputMessage();
+    Validator validator;
+
+    HubConnection? hubConnection;
+
+    protected async override Task OnInitializedAsync() {
+        isOpen = true;
+        user = ((IAuthService)AuthProvider).GetAccount();
+        if(user == null) NavManager.NavigateTo("/", forceLoad: true);
+        chat = await _chatRepository.GetChat(user, Convert.ToInt64(Id));
+        if(chat.Chat == null) NavManager.NavigateTo("/", forceLoad: true);
+        message = new InputMessage();
+        List<Message> msgs = (await _messageRepository.GetMessages(chat.Chat));
+        foreach(Message m in msgs) {
+            messages.Add(new DisplayMessage() {
+                    Message = m,
+                    Status = await _messageRepository.CheckMessageStatus(m)
+                });
+        }
+        hubConnection = new HubConnectionBuilder().WithUrl("https://localhost:7097/chathub").Build();
+
+        ReceiveMessage();
+        ReceiveStatus();
+        ReceiveDeleteMessage();
+
+        await hubConnection.StartAsync();
+
+        if(messages.Any()) {
+            await _messageRepository.SetMessageStatus(user, messages.Last().Message);
+            await hubConnection.SendAsync("SendStatus", chat.Id);
+        }
+    }
+
+    /* Scroll to the last message */
+    protected async override Task OnAfterRenderAsync(bool firstRender) {
+        await JSRuntime.InvokeVoidAsync("ScrollTo", ".messages");
+    }
+
+    /* Receives Message and sends status update */
+    private void ReceiveMessage() {
+        hubConnection.On<long>($"ReceiveMessage_{chat.Id}", async (messageId) => {
+            if(isOpen) {
+                messages.Add(new DisplayMessage() { Message = await _messageRepository.ReceiveMessage(messageId) });
+                StateHasChanged();
+                if(messages.Last().Message.User.Id == user.Id) await JSRuntime.InvokeVoidAsync("ScrollTo", ".messages");
+                await _messageRepository.SetMessageStatus(user, messages.Last().Message);
+                await hubConnection.SendAsync("SendStatus", chat.Id);
+            }
+        });
+    }
+
+    /* Receives status update */
+    private void ReceiveStatus() {
+        hubConnection.On($"ReceiveStatus_{chat.Id}", async () => {
+            foreach(DisplayMessage msg in messages.SkipWhile(m => m.Status.Count() >= chat.Chat.Users.Count())) {
+                msg.Status = await _messageRepository.CheckMessageStatus(msg.Message);
+                StateHasChanged();
+            }
+        });
+    }
+
+    /* Receives message delete */
+    private void ReceiveDeleteMessage() {
+        hubConnection.On<long>($"ReceiveDeleteMessage_{chat.Id}", (msgId) => {
+            var msg = messages.FirstOrDefault(m => m.Message.MessageId == msgId);
+            if(msg == null) return;
+            messages.Remove(msg);
+            StateHasChanged();
+        });
+    }
+
+    /* Add Files into the Input Message*/
+    private async Task InputFile(InputFileChangeEventArgs e) {
+        try {
+            if(e.FileCount > 0) {
+                foreach(IBrowserFile file in e.GetMultipleFiles(10)) {
+                    var doc = new InputDocument();
+                    doc.Name = file.Name;
+                    await doc.Document.Set(file.OpenReadStream(5242880), file.ContentType);
+                    message.Attachment.Add(doc);
+                }
+            }
+        } catch(Exception ex) {
+            validator.DisplayErrors(new Dictionary<string, List<string>>() { { "Document", new List<string>() { ex.Message } } });
+        }
+        this.StateHasChanged();
+    }
+
+    /* Send Message */
+    private async Task Send(EditContext context) {
+        if(hubConnection != null) {
+            validator.Clear();
+            if(!context.Validate()) return;
+            else if(!string.IsNullOrEmpty(message.Content)) {
+                var m = await _messageRepository.SendMessage(new Message() {
+                        Chat = new Chat() { Id = chat.Id },
+                        User = new User() { Id = user.Id, Username = user.Username },
+                        SendAt = DateTime.Now,
+                        Content = message.Content,
+                        MessageAttachments = message.Attachment.Select(a => new MessageAttachment() { Name = a.Name, Attachment = a.Document }).ToList()
+                    });
+                await hubConnection.SendAsync("SendMessage", chat.Id, m.MessageId);
+                message = new InputMessage();
+            } else {
+                validator.DisplayErrors(new Dictionary<string, List<string>>() { { "SendMessage", new List<string>() { "You need to write a message before you can send it." } } });
+            }
+        } else validator.DisplayErrors(new Dictionary<string, List<string>>() { { "Chat", new List<string>() { "Connection is disrupted." } } });
+    }
+
+    /* Delete Message */
+    private async Task Delete(DisplayMessage message) {
+        if(hubConnection != null) {
+            await _messageRepository.DeleteMessage(message.Message);
+            await hubConnection.SendAsync("SendDeleteMessage", chat.Id, message.Message.MessageId);
+        }
+    }
+
+    /* To stop the status update after closing the page */
+    public void Dispose(){
+        isOpen = false;
+    }
+}

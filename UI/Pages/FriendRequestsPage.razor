@@ -1,0 +1,57 @@
+﻿@page "/friendrequests"
+@inject IUserRepository _repository
+@inject IChatRepository _chatRepository
+@inject NavigationManager NavManager
+@inject AuthenticationStateProvider AuthProvider
+
+<PageTitle>Friend Requests</PageTitle>
+
+<DarkMode />
+
+<AuthorizeView>
+    <Authorized>
+        @if(Results.Any()) {
+            <div class="list">
+            @foreach(User u in Results) {
+                <div>
+                    <span class="pre">
+                        <span>@u.Username</span>
+                    </span>
+                    <span class="post">
+                        @if(u.ChatMode == ChatMode.PUBLIC) {
+                            <button @onclick=@(() => Chat(u))><span class="material-icons">chat</span></button>
+                        }
+                        <button @onclick=@(() => Add(u))><span class="material-icons">add</span></button>
+                    </span>
+                </div>
+            }
+            </div>
+        } else {
+            <div>You have no open friend requests.</div>
+        }
+
+
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    List<User> Results { get; set; } = new List<User>();
+
+    User user;
+
+    protected async override Task OnInitializedAsync() {
+        user = ((IAuthService)AuthProvider).GetAccount();
+        Results = await _repository.GetFriendRequests(user);
+    }
+
+    private async Task Chat(User u) {
+        Singlechat chat = await _chatRepository.CreateSinglechat(user, u);
+        NavManager.NavigateTo($"/chat/{chat.Id}");
+    }
+
+    private async Task Add(User u) {
+        await _repository.AddFriend(user, u);
+        Singlechat chat = await _chatRepository.CreateSinglechat(user, u);
+        Results.Remove(u);
+    }
+}

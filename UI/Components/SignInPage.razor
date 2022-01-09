@@ -1,0 +1,82 @@
+﻿@inject Domain.Repository.IUserRepository _repository
+@inject Services.IMailService _mailService
+@inject NavigationManager NavManager
+@inject AuthenticationStateProvider AuthProvider
+
+<EditForm Model="login" OnSubmit="Login">
+    <h1>Login</h1>
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <Validator @ref="loginValidator" />
+
+    <InputText class="loi si" @bind-Value="login.Identifier" placeholder="Identifier" /> <br />
+    <input type="password" class="loi si" @bind-value="login.Password" placeholder="Password" /> <br />
+    <div style="display:flex;justify-content:space-between;">
+        <button><span class="material-icons">play_arrow</span> Lets go!</button>
+        <a href="/passwordreset">Forgot Password...</a>
+    </div>
+    
+</EditForm>
+
+<hr />
+
+<EditForm Model="register" OnSubmit="Register">
+    <h1>Register</h1>
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <Validator @ref="registerValidator" />
+
+    <InputText class="loi si" @bind-Value="register.Username" placeholder="Username" /> <br />
+    <InputText class="loi si" @bind-Value="register.Email" placeholder="Email" /> <br />
+    <input type="password" class="loi si" @bind-value="register.Password" placeholder="Password" /> <br />
+
+    <button><span class="material-icons">play_arrow</span> Lets go!</button>
+</EditForm>
+
+@code {
+    IAuthService Auth;
+
+    private LoginForm login;
+    private Validator loginValidator;
+
+    private RegisterForm register;
+    private Validator registerValidator;
+
+    protected override Task OnInitializedAsync() {
+        login = new LoginForm();
+        register = new RegisterForm();
+        Auth = ((IAuthService)AuthProvider);
+        return base.OnInitializedAsync();
+    }
+
+    private async void Register(EditContext context) {
+        try {
+            if((await _repository.FilterAsync(u => u.Username.ToUpper() == register.Username.ToUpper())).Any()) registerValidator.DisplayErrors(new Dictionary<string, List<string>>() { { "Username", new List<string>() { "Username is already in use!" } } });
+            else if((await _repository.FilterAsync(u => u.Email.ToUpper() == register.Email.ToUpper())).Any()) registerValidator.DisplayErrors(new Dictionary<string, List<string>>() { { "Email", new List<string>() { "Email is already in use!" } } });
+            else {
+                Random rn = new Random();
+                User user = new User() {
+                    Username = register.Username,
+                    Email = register.Email,
+                    Password = register.Password
+                };
+                user = await _repository.CreateAsync(user);
+                UserCode code = await _repository.CreateEmailVerificationCode(user);
+                await _mailService.SendEmailAsync(user.Email, "Chat - EMAIL VERIFICATION", $"{code.Code}");
+                NavManager.NavigateTo($"/emailverification/{user.Username}");
+            }
+        } catch(Exception e) {
+            Console.WriteLine(e.ToString());
+        }
+    }
+
+    private async void Login(EditContext context) {
+        try {
+            loginValidator.Clear();
+            if(!context.Validate()) return;
+            else if(await Auth.Login(login.Identifier, login.Password)) NavManager.NavigateTo("/", forceLoad: true);
+        } catch(Exception e) {
+            loginValidator.DisplayErrors(new Dictionary<string, List<string>>() { { "Account", new List<string>() { e.Message } } });
+        }
+    }
+}

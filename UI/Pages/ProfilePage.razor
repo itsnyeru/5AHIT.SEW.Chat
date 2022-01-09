@@ -1,0 +1,75 @@
+﻿@page "/profile"
+@inject IUserRepository _repository
+@inject NavigationManager NavManager
+@inject AuthenticationStateProvider AuthProvider
+
+<PageTitle>Edit Profile</PageTitle>
+
+<DarkMode />
+
+<AuthorizeView>
+    <Authorized Context="AuthContext">
+        <EditForm Model=profileForm OnSubmit=Submit>
+            <Validator @ref="validator" />
+            <img src="@profileForm.Image" style="width:50px;height:50px;border-radius:100%;border:1px solid black;" />
+            <InputFile OnChange="@LoadFile" accept="image/*" style="border:0;"/>
+            <hr />
+            <input @bind-value=profileForm.Username />
+            <hr />
+            <InputCheckbox @bind-Value=profileForm.DarkMode /> Dark Mode
+            <hr />
+            <InputSelect @bind-Value=profileForm.ChatMode>
+                <option value=@ChatMode.ONLY_FRIENDS>Only Friends</option>
+                <option value=@ChatMode.PUBLIC>Public</option>
+            </InputSelect>
+            <hr />
+            <button><span class="material-icons">edit</span> Save</button>
+        </EditForm>
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    private Validator validator;
+
+    ProfileForm profileForm;
+
+    User user = new User();
+
+    protected async override Task OnInitializedAsync() {
+        user = ((IAuthService)AuthProvider).GetAccount();
+        profileForm = new ProfileForm() {
+                Image = user.Image ?? new Image(),
+                Username = user.Username,
+                DarkMode = user.DarkMode,
+                ChatMode = user.ChatMode
+            };
+    }
+
+    private async Task LoadFile(InputFileChangeEventArgs e) {
+        try {
+            if(e.FileCount > 0) {
+                var file = e.File;
+                profileForm.Image = new Image();
+                await profileForm.Image.Set(file.OpenReadStream(5242880), file.ContentType);
+            }
+        } catch(Exception ex) {
+            validator.DisplayErrors(new Dictionary<string, List<string>>() { { "Image", new List<string>() { ex.Message } } });
+        }
+        this.StateHasChanged();
+    }
+
+    public async Task Submit(EditContext context) {
+        validator.Clear();
+        if(!context.Validate()) return;
+        else if(profileForm.Username.ToUpper() != user.Username.ToUpper() && (await _repository.FilterAsync(u => u.Username.ToUpper() == profileForm.Username.ToUpper())).Any())
+            validator.DisplayErrors(new Dictionary<string, List<string>>() { { "Username", new List<string>() { "Username is already in use!" } } });
+        else {
+            user.Image = profileForm.Image;
+            user.Username = profileForm.Username;
+            user.DarkMode = profileForm.DarkMode;
+            user.ChatMode = profileForm.ChatMode;
+            await _repository.UpdateAsync(user);
+            NavManager.NavigateTo("/", forceLoad: true);
+        }
+    }
+}

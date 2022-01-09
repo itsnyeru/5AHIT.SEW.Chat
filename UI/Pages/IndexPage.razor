@@ -1,0 +1,13 @@
+﻿@page "/"
+<PageTitle>Home</PageTitle>
+
+<DarkMode />
+
+<AuthorizeView>
+    <Authorized>
+        <Chats />
+    </Authorized>
+    <NotAuthorized>
+        <SignInPage />
+    </NotAuthorized>
+</AuthorizeView>

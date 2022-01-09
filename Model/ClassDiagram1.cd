@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="Model.Configuration.ChatDbContext">
+    <Position X="6" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAMAACAAAAAAAJABACAAAAAAQAIAAAAAAAAAAAAAAAg=</HashCode>
+      <FileName>Configuration\ChatDbContext.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Model.Entity.Chat">
+    <Position X="13" Y="0.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Entity\Chat.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Model.Entity.ChatMessage">
+    <Position X="14" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAgAAAIAAAAAAAAAAAAAAAIAEAAAAAAAAAAA=</HashCode>
+      <FileName>Entity\ChatMessage.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Model.Entity.ChatMessageAttachment">
+    <Position X="16" Y="3.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAgAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Entity\ChatMessageAttachment.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Model.Entity.ChatUser">
+    <Position X="11.75" Y="3.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAA=</HashCode>
+      <FileName>Entity\ChatUser.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Model.Entity.FriendRequest">
+    <Position X="8" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAIAAA=</HashCode>
+      <FileName>Entity\FriendRequest.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Model.Entity.GroupChat">
+    <Position X="14" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Entity\GroupChat.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Model.Entity.User">
+    <Position X="8" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAACAAAAQCAAAAIAAQAAAAAAAAAAABACAAAAAAAAAAA=</HashCode>
+      <FileName>Entity\User.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Model.Entity.UserChat">
+    <Position X="11.75" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Entity\UserChat.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Model.Entity.UserEmailVerification">
+    <Position X="10" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Entity\UserEmailVerification.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Model.Entity.UserFriend">
+    <Position X="10" Y="4.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAIAAA=</HashCode>
+      <FileName>Entity\UserFriend.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Model.Entity.UserPasswordReset">
+    <Position X="10" Y="2" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAABAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Entity\UserPasswordReset.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Enum Name="Model.Entity.ChatMode">
+    <Position X="8" Y="3" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAEAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>Entity\ChatMode.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>
